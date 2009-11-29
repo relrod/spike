@@ -27,6 +27,10 @@ int main(){
       string data = con->read();
       if(data != 0){
          write("-> " + data + "\n");
+         array pts = Regexp.split2(":(.+)!(.+)@(.+) PRIVMSG (.+) :(.+)", data);
+         if(Regexp.match("!test",data) == 1){
+            sendln("PRIVMSG #bots :you are " + pts[1]);
+         }
       }
    }
 }
