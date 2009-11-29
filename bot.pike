@@ -31,6 +31,9 @@ int main(){
          if(Regexp.match("!test",data) == 1){
             sendln("PRIVMSG #bots :you are " + pts[1]);
          }
+         if(Regexp.match("!time",data) == 1){
+            sendln("PRIVMSG #bots :time is " + localtime(time())["hour"] + ":" + localtime(time())["min"] );
+         }
       }
    }
 }
