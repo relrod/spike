@@ -10,30 +10,22 @@ int main(){
    int port        = 6667;
    array channels  = ({"#bots"});
 
-   if(!con->connect(server,port)) {
-      write("Unable to connect to " + server + "\n");
-      exit(0);
-   }
-   // Still alive \o/
+   connect(server,nick,userln,port,channels,1);
 
-   con->set_nonblocking();
-   sendln("NICK " + nick);
-   sendln("USER " + userln);
-   foreach(channels, string channel) {
-      sendln("JOIN " + channel);
-   }
+   // Still alive \o/
 
    while(1){
       string data = con->read();
       if(data != 0){
-         write("-> " + data + "\n");
-         if(Regexp.match("PING",data) == 1){
+         write("-> '" + data + "'");
+         if(Regexp.match("^PING",data) == 1){
             // Probably a better way to parse this.
-            if(array ping = Regexp.split2("PING :(.*)",data)){
+            if(array ping = Regexp.split2("PING (.*)",data)){
                sendln("PONG " + ping[1]);
             }
          }
          array pts = Regexp.split2(":(.+)!(.+)@(.+) PRIVMSG (.+) :(.+)", data);
+
          if(Regexp.match("!test",data) == 1){
             sendln("PRIVMSG " + pts[4] + " :you are " + pts[1]);
          }
@@ -42,11 +34,50 @@ int main(){
             int minute = localtime(time())["min"];
             sendln("PRIVMSG " + pts[4] + " :time is " + hour + ":" + minute);
          }
+         if(Regexp.match("!randstr",data) == 1){
+            sendln("PRIVMSG " + pts[4] + " :" + replace(replace(random_string(255),"\n",""),"\r",""));
+         }
+         if(Regexp.match("!join",data) == 1){
+            if(array channel = Regexp.split2("^!join (.+)",pts[5])){
+               sendln("JOIN " + channel[1]);
+            }
+         }
+         if(Regexp.match("!murder",data) == 1){
+            if(array who = Regexp.split2("^!murder (.+)",pts[5])){
+               sendln("PRIVMSG " + pts[4] + " :\001ACTION murders " + replace(replace(who[1],"\n",""),"\r","") + " as per " + pts[1] + "'s command.\001");
+            }
+         }
       }
    }
 }
 
-string sendln(string raw) {
+int connect(string server, string nick, string userln, int port, array channels, int firstconnect) {
+   // If we're just starting the script and unable to connect, don't keep trying, just die.
+   // But if we've been connected and just lost the conn. for some reason, then try to regain it.
+   if(!con->connect(server,port)) {
+      if(firstconnect == 1){
+         write("Unable to connect to " + server + "\n");
+         exit(0);
+      } else {
+         err("Disconnected from server. Attempting to reconnect.");
+         return 2; // 2 = wait five seconds and try reconnecting.
+      }
+   } else { // We've connected.
+      con->set_nonblocking();
+      sendln("NICK " + nick);
+      sendln("USER " + userln);
+      foreach(channels, string channel) {
+         sendln("JOIN " + channel);
+      }
+      return 1;
+   }
+}
+
+void err(string message){
+   write("+++ " + message + " +++\n");
+}
+
+void sendln(string raw) {
    write("<- " + raw + "\n");
    con->write(raw + "\r\n");
 }
