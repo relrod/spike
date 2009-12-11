@@ -13,11 +13,22 @@ int main(){
    connect(server,nick,userln,port,channels,1);
 
    // Still alive \o/
-
+   string data;
+   
    while(1){
-      string data = con->read();
+      data = con->read();
+      if(data) write(data + "\n");
+
       if(data != 0){
-         write("-> '" + data + "'");
+         if(data == ""){
+            write("Reconnecting in 5 seconds.\n");
+            sleep(5);
+            if(connect(server,nick,userln,port,channels,1) == 1){
+               data = "RECONNECTING";
+               continue;
+            }
+         }
+
          if(Regexp.match("^PING",data) == 1){
             // Probably a better way to parse this.
             if(array ping = Regexp.split2("PING (.*)",data)){
@@ -54,23 +65,26 @@ int main(){
 int connect(string server, string nick, string userln, int port, array channels, int firstconnect) {
    // If we're just starting the script and unable to connect, don't keep trying, just die.
    // But if we've been connected and just lost the conn. for some reason, then try to regain it.
-   if(!con->connect(server,port)) {
-      if(firstconnect == 1){
-         write("Unable to connect to " + server + "\n");
-         exit(0);
-      } else {
-         err("Disconnected from server. Attempting to reconnect.");
-         return 2; // 2 = wait five seconds and try reconnecting.
-      }
-   } else { // We've connected.
-      con->set_nonblocking();
-      sendln("NICK " + nick);
-      sendln("USER " + userln);
-      foreach(channels, string channel) {
-         sendln("JOIN " + channel);
-      }
-      return 1;
+
+   con->close();
+
+   if(con->connect(server,port)) {
+      err("Connected to server!");
+   } else {
+      con->connect(server,port);
    }
+   
+   // We've connected.
+   con->set_nonblocking();
+   sendln("NICK " + nick);
+   sendln("USER " + userln);
+   foreach(channels, string channel) {
+      sendln("JOIN " + channel);
+   }
+   if(firstconnect == 0){
+      sendln("PRIVMSG #bots :I reconnected. Yay me.");
+   }
+   return 1;
 }
 
 void err(string message){
