@@ -24,8 +24,8 @@ int main(){
             write("Reconnecting in 5 seconds.\n");
             sleep(5);
             if(connect(server,nick,userln,port,channels,1) == 1){
-               data = "RECONNECTING";
-               continue;
+               // We can add something here to do something once we reconnect.
+               // Not necessary, but doable.
             }
          }
 
@@ -55,7 +55,7 @@ int main(){
          }
          if(Regexp.match("!murder",data) == 1){
             if(array who = Regexp.split2("^!murder (.+)",pts[5])){
-               sendln("PRIVMSG " + pts[4] + " :\001ACTION murders " + replace(replace(who[1],"\n",""),"\r","") + " as per " + pts[1] + "'s command.\001");
+               sendln("PRIVMSG " + pts[4] + " :\001ACTION murders " + (who[1] - "\r" - "\n" - " ") + " as per " + pts[1] + "'s command.\001");
             }
          }
       }
