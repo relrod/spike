@@ -58,13 +58,18 @@ int main(){
                sendln("PRIVMSG " + pts[4] + " :\001ACTION murders " + (who[1] - "\r" - "\n" - " ") + " as per " + pts[1] + "'s command.\001");
             }
          }
+         if(Regexp.match("an idea", data) || Regexp.match("a taco", data)){
+            sendln("PRIVMSG " + pts[4] + " :" + replace(pts[5], "an idea", "a taco"));
+         }
       }
    }
 }
 
 int connect(string server, string nick, string userln, int port, array channels, int firstconnect) {
-   // If we're just starting the script and unable to connect, don't keep trying, just die.
-   // But if we've been connected and just lost the conn. for some reason, then try to regain it.
+   // If we're just starting the script and unable to connect,
+   // don't keep trying, just die. Butt if we've been connected
+   // and just lost the connection for some reason, then try to
+   // regain it.
 
    con->close();
 
